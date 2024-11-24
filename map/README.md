@@ -117,3 +117,22 @@ func mapclear(t *maptype, h *hmap) {
 	h.flags &^= hashWriting
 }
 ```
+
+## Map中的key有什么限制
+
+go语言中，可比较的类型都可以作为map的key
+
+可作为key的类型：
+- 布尔值
+- 数字类型
+- 字符串
+- 指针
+- 通道
+- 接口类型
+- 结构体
+- 只包含上述类型的数组。
+
+不可作为key的类型
+- slice
+- map
+- function

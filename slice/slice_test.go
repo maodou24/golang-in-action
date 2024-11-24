@@ -54,3 +54,46 @@ func TestArrayExceptFirstToSlice(t *testing.T) {
 func TestOperateSlice(t *testing.T) {
 	OperateSlice()
 }
+
+func TestAppendSlice(t *testing.T) {
+	s := make([]int, 0, 2)
+	AppendSlice(s, 1)
+	if len(s) != 0 {
+		t.Fatal("AppendSlice can't affect slice")
+	}
+}
+
+func TestModifySliceWithReCap(t *testing.T) {
+	s := []int{1, 2, 3}
+	ModifySliceWithReCap(s)
+
+	if s[0] == 55 {
+		t.Fatal("ModifySliceWithReCap failed")
+	}
+}
+
+func TestFuncAppendSliceWithReCap(t *testing.T) {
+	s := []int{1, 2, 3}
+	fmt.Println("-- func out before append --")
+	fmt.Printf("%v\n", s)
+	fmt.Printf("%v, len: %v, cap: %v\n", s, len(s), cap(s))
+	fmt.Printf("point: %p, %p\n", s, &s)
+	AppendSlice(s, 1)
+
+	fmt.Println("-- func out after append --")
+	fmt.Printf("%v, len: %v, cap: %v\n", s, len(s), cap(s))
+	fmt.Printf("%v\n", s)
+	fmt.Printf("point: %p, %p\n", s, &s)
+}
+
+func TestFuncAppendSliceWithoutReCap(t *testing.T) {
+	s := make([]int, 0, 2)
+	fmt.Println("-- func out before append --")
+	fmt.Printf("%v, len: %v, cap: %v\n", s, len(s), cap(s))
+	fmt.Printf("point: %p, %p\n", s, &s)
+	AppendSlice(s, 1)
+
+	fmt.Println("-- func out after append --")
+	fmt.Printf("%v, len: %v, cap: %v\n", s, len(s), cap(s))
+	fmt.Printf("point: %p, %p\n", s, &s)
+}
