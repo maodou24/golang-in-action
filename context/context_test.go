@@ -3,5 +3,9 @@ package context
 import "testing"
 
 func TestTaskDone(t *testing.T) {
-	TaskDone()
+	ParllalTaskDone()
+}
+
+func TestTaskSetTimer(t *testing.T) {
+	TaskSetTimer()
 }
