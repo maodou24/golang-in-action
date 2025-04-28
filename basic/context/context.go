@@ -12,6 +12,7 @@ func ParllalTaskDone() {
 	ctx := context.Background()
 
 	ctx1, cancel := context.WithCancel(ctx)
+	defer cancel()
 	n := 5
 
 	exit := make(chan int)
@@ -43,7 +44,6 @@ func ParllalTaskDone() {
 	}
 
 	for range exit {
-		cancel()
 		close(exit)
 	}
 
