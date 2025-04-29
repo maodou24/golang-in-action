@@ -8,6 +8,12 @@ require (
 )
 
 require (
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
+	golang.org/x/text v0.21.0 // indirect
+)
+
+require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -60,4 +66,5 @@ require (
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/gorm v1.26.0
 )
