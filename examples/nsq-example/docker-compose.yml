@@ -10,7 +10,7 @@ services:
     image: nsqio/nsq
     command: /nsqd 
       --lookupd-tcp-address=nsqlookupd:4160
-      --broadcast-address=192.168.71.116
+      --broadcast-address=192.168.71.116 # must local ip when use docker container.
     depends_on:
       - nsqlookupd
     ports:
