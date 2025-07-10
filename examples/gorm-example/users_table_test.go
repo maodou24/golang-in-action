@@ -4,24 +4,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/maodou24/gorm-example/modle"
+	"github.com/maodou24/gorm-example/models"
 	"github.com/maodou24/gorm-example/pg"
 )
 
 func TestCreateTable(t *testing.T) {
-	if err := pg.GetDb().AutoMigrate(&modle.User{}); err != nil {
+	if err := pg.GetDb().AutoMigrate(&models.User{}); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestUserTableInsert(t *testing.T) {
-	user := modle.User{Name: "maodou", Age: 18}
+	user := models.User{Name: "maodou", Age: 18}
 	pg.GetDb().Create(&user)
 }
 
 func TestUserTableQueryFirst(t *testing.T) {
 	// query
-	var result modle.User
+	var result models.User
 	pg.GetDb().First(&result)
 
 	fmt.Printf("%+v", result)
@@ -29,19 +29,19 @@ func TestUserTableQueryFirst(t *testing.T) {
 
 func TestUserTableQuery(t *testing.T) {
 	// query
-	user := modle.User{Name: "maodou"}
+	user := models.User{Name: "maodou"}
 	pg.GetDb().Find(&user)
 
 	fmt.Printf("%+v", user)
 }
 
 func TestUserTableDelete(t *testing.T) {
-	deleteUser := modle.User{Name: "maodou"}
-	if err := pg.GetDb().Where("name = ?", deleteUser.Name).Delete(&modle.User{}).Error; err != nil {
+	deleteUser := models.User{Name: "maodou"}
+	if err := pg.GetDb().Where("name = ?", deleteUser.Name).Delete(&models.User{}).Error; err != nil {
 		t.Error(err)
 	}
 }
 
 func TestUserTableDeleteByAge(t *testing.T) {
-	pg.GetDb().Where("age = ?", 18).Delete(&modle.User{})
+	pg.GetDb().Where("age = ?", 18).Delete(&models.User{})
 }
