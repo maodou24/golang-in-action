@@ -45,3 +45,48 @@ func TestSendToCloseChannel(t *testing.T) {
 		SendToCloseChannel(ch)
 	})
 }
+
+func TestSafeCloseRudely(t *testing.T) {
+	ch := make(chan any, 1)
+	close(ch)
+
+	assert.NotPanics(t, func() {
+		closed := SafeCloseRudely(ch)
+		assert.False(t, closed)
+	})
+
+	ch2 := make(chan any, 1)
+	assert.NotPanics(t, func() {
+		closed := SafeCloseRudely(ch2)
+		assert.True(t, closed)
+		closed = SafeCloseRudely(ch2)
+		assert.False(t, closed)
+	})
+}
+
+func TestSafeSendRudely(t *testing.T) {
+	ch := make(chan any, 1)
+	close(ch)
+
+	assert.NotPanics(t, func() {
+		closed := SafeSendRudely(ch, 1)
+		assert.True(t, closed)
+	})
+
+	ch2 := make(chan any, 1)
+	assert.NotPanics(t, func() {
+		closed := SafeSendRudely(ch2, 1)
+		assert.False(t, closed)
+	})
+}
+
+func TestSafeCloser(t *testing.T) {
+	ch := make(chan any, 1)
+
+	closer := NewSafeCloser(ch)
+
+	assert.NotPanics(t, func() {
+		closer.Close()
+		closer.Close()
+	})
+}
