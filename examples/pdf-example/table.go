@@ -1,26 +1,48 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/signintech/gopdf"
-	"strings"
 )
 
 const (
-	pagePadding float64 = 22
-	pageBottom  float64 = 22
+	pageW       float64 = 595
+	pageH       float64 = 842
+	pagePadding float64 = 24
+	pageBottom  float64 = 16
 	textPadding float64 = 4
+
+	// header
+	headerY      float64 = 90
+	headerTitleH float64 = 28
+	headerDateH  float64 = 14
+	headerDateY  float64 = 56
+	// logo image
+	imgX float64 = 479
+	imgW float64 = 92
+	imgH float64 = 42
+
+	// cell
+	cellTextH float64 = 10
+	maxCellY  float64 = pageH - 50
 
 	// fonts
 	fontNotoSansSC       = "NotoSansSC"
 	fontNotoSansSemiBold = "NotoSansSCSemiBold"
 	// font size
-	fontSizeTitle  = 14
-	fontSizeCell   = 6
-	fontSizeFooter = 8
+	fontSizeTitle  float64 = 20
+	fontSizeDate   float64 = 10
+	fontSizeFooter float64 = 8
+	fontSizeCell   float64 = 6
 
 	// footer
 	footnote = "github.com/maodou24"
+	footerH  = 12
+	footerW  = 547
 )
 
 type TableColumn struct {
@@ -30,11 +52,18 @@ type TableColumn struct {
 
 type TableRow []string
 type Table struct {
+	title     string
+	startTime string
+	headers   []TableColumn
 	headerRow TableRow
+	columnX   []float64
+
+	imgHolder gopdf.ImageHolder
 	pdf       *gopdf.GoPdf
 
 	pageRowStart int
 	pageRowEnd   int
+	total        int
 }
 
 /*
@@ -47,7 +76,7 @@ NewTable
     2）未超过的列当前页面居中，下一样空白
  4. 单元格文本左对齐且垂直居中
 */
-func NewTable(title string, headers []TableColumn) (*Table, error) {
+func NewTable(title string, total int, headers []TableColumn) (*Table, error) {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 
@@ -61,46 +90,224 @@ func NewTable(title string, headers []TableColumn) (*Table, error) {
 		return nil, err
 	}
 
-	headerRow := make([]string, len(headers))
-	for i := range headers {
-		headerRow[i] = headers[i].Title
+	imgData, err := os.ReadFile("./fonts/logo.jpg")
+	if err != nil {
+		return nil, err
 	}
 
-	return &Table{
-		pdf:       pdf,
-		headerRow: headerRow,
-	}, nil
+	imgHolder, err := gopdf.ImageHolderByBytes(imgData)
+	if err != nil {
+		return nil, err
+	}
+
+	headerRow := make([]string, len(headers))
+	columnX := make([]float64, len(headers))
+	for i := range headers {
+		headerRow[i] = headers[i].Title
+		if i == 0 {
+			columnX[i] = pagePadding
+		} else {
+			columnX[i] = headers[i-1].Width + columnX[i-1]
+		}
+	}
+
+	table := &Table{
+		pdf:          pdf,
+		imgHolder:    imgHolder,
+		headers:      headers,
+		title:        title,
+		columnX:      columnX,
+		total:        total,
+		pageRowStart: 1,
+		startTime:    time.Now().Format(time.DateTime),
+		headerRow:    headerRow,
+	}
+
+	err = table.addPage()
+	if err != nil {
+		return nil, err
+	}
+	return table, nil
 }
 
-func (t *Table) DrawRow(row ...TableRow) error {
-
-}
-
-func (t *Table) drawRow(row TableRow) error {
-
-}
-
-func (t *Table) addPage() error {
-	err := t.addFooter()
+func (t *Table) DrawRow(rows ...TableRow) error {
+	err := t.pdf.SetFont(fontNotoSansSC, "", fontSizeCell)
 	if err != nil {
 		return err
 	}
+	for i := range rows {
+		err = t.drawRow(rows[i])
+		if err != nil {
+			return err
+		}
+		t.pageRowEnd++
+	}
+	return nil
+}
+
+func (t *Table) drawRow(row TableRow) error {
+	linesList := make([][]string, len(row))
+	cellH := make([]float64, len(row))
+
+	var maxNum int
+	for i := range row {
+		column := row[i]
+
+		// if column is empty, replace empty string with -
+		if len(column) == 0 {
+			column = "-"
+		}
+
+		strs, err := t.pdf.SplitTextWithWordWrap(column, t.headers[i].Width-textPadding*2)
+		if err != nil {
+			return err
+		}
+
+		l := len(strs)
+		if l > maxNum {
+			maxNum = l
+		}
+
+		cellH[i] = float64(l) * cellTextH
+		linesList[i] = strs
+	}
+
+	if maxNum == 0 {
+		return errors.New("no data in row")
+	}
+
+	fmt.Println("max", maxNum)
+	rowMaxH := float64(maxNum) * cellTextH
+	for i := 0; i < maxNum; i++ {
+		y := t.pdf.GetY()
+
+		fmt.Print("row text start")
+		for j := range linesList {
+			if i >= len(linesList[j]) {
+				continue
+			}
+
+			var offset float64 = 0
+			if i == 0 && cellH[j] < min(rowMaxH, maxCellY-y) {
+				offset = (min(rowMaxH, maxCellY-y) - cellH[j]) / 2
+			}
+			if y+offset+cellTextH > maxCellY {
+				if err := t.addPage(); err != nil {
+					return err
+				}
+				y = t.pdf.GetY()
+				offset = 0
+			}
+
+			t.pdf.SetXY(t.columnX[j]+textPadding, y+offset+textPadding)
+			fmt.Print(" ", t.pdf.GetY())
+
+			rect := &gopdf.Rect{W: t.headers[j].Width - 2*textPadding, H: cellTextH}
+			opt := gopdf.CellOption{Align: gopdf.Middle}
+			err := t.pdf.CellWithOption(rect, linesList[j][i], opt)
+			if err != nil {
+				return err
+			}
+		}
+
+		fmt.Println()
+		t.pdf.SetXY(pagePadding, y+cellTextH)
+	}
+
+	t.pdf.SetXY(pagePadding, t.pdf.GetY()+2*textPadding)
+	fmt.Println("row end", t.pdf.GetY())
+
+	return nil
+}
+
+func (t *Table) addPage() error {
+	if t.pageRowEnd > 1 {
+		err := t.addFooter()
+		if err != nil {
+			return err
+		}
+	}
+
 	t.pdf.AddPage()
 
 	t.addHeader()
-
+	t.pageRowStart = t.pageRowEnd + 1
+	return nil
 }
 
 func (t *Table) addHeader() error {
+	err := t.pdf.SetFont(fontNotoSansSemiBold, "", fontSizeTitle)
+	if err != nil {
+		return err
+	}
 
+	textWidth, err := t.pdf.MeasureTextWidth(t.title)
+	if err != nil {
+		return err
+	}
+
+	t.pdf.SetXY(pagePadding, pagePadding)
+	rect := &gopdf.Rect{W: textWidth, H: headerTitleH}
+	opt := gopdf.CellOption{Align: gopdf.Middle}
+	err = t.pdf.CellWithOption(rect, t.title, opt)
+	if err != nil {
+		return err
+	}
+
+	err = t.pdf.SetFont(fontNotoSansSC, "", fontSizeDate)
+	if err != nil {
+		return err
+	}
+	timeWidth, err := t.pdf.MeasureTextWidth(t.startTime)
+	if err != nil {
+		return err
+	}
+
+	t.pdf.SetXY(pagePadding, headerDateY)
+	rect = &gopdf.Rect{W: timeWidth, H: headerDateH}
+	opt = gopdf.CellOption{Align: gopdf.Middle}
+	err = t.pdf.CellWithOption(rect, t.startTime, opt)
+	if err != nil {
+		return err
+	}
+
+	// jci log
+	err = t.pdf.ImageByHolder(t.imgHolder, imgX, pagePadding, &gopdf.Rect{W: imgW, H: imgH})
+	if err != nil {
+		return err
+	}
+
+	// header
+	t.pdf.SetXY(pagePadding, headerY)
+
+	err = t.pdf.SetFont(fontNotoSansSemiBold, "", fontSizeCell)
+	if err != nil {
+		return err
+	}
+
+	err = t.drawRow(t.headerRow)
+	if err != nil {
+		return err
+	}
+
+	err = t.pdf.SetFont(fontNotoSansSC, "", fontSizeCell)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (t *Table) addFooter() error {
-	if t.pageRowStart == t.pageRowEnd {
-		return nil
+	err := t.pdf.SetFont(fontNotoSansSC, "", fontSizeFooter)
+	if err != nil {
+		return err
 	}
 
-	err := t.pdf.SetFont(fontNotoSansSC, "", fontSizeFooter)
+	pageText := fmt.Sprintf("%v-%v of %v", t.pageRowStart, t.pageRowEnd, t.total)
+	t.pdf.SetXY(pagePadding, pageH-pageBottom-footerH)
+	rect := &gopdf.Rect{W: footerW, H: footerH}
+	err = t.pdf.CellWithOption(rect, pageText, gopdf.CellOption{Align: gopdf.Middle})
 	if err != nil {
 		return err
 	}
@@ -109,21 +316,14 @@ func (t *Table) addFooter() error {
 	if err != nil {
 		return err
 	}
-
-	t.pdf.SetXY(gopdf.PageSizeA4.W-pagePadding-w, gopdf.PageSizeA4.H-pageBottom-18)
-	rect := &gopdf.Rect{W: w, H: 10}
+	t.pdf.SetXY(pageW-pagePadding-w, pageH-pageBottom-footerH)
+	rect = &gopdf.Rect{W: w, H: footerH}
 	err = t.pdf.CellWithOption(rect, footnote, gopdf.CellOption{Align: gopdf.Middle})
 	if err != nil {
 		return err
 	}
 
-	pageInfo := fmt.Sprintf("%v-%v", t.pageRowStart, t.pageRowEnd)
-	t.pdf.SetXY(pagePadding, gopdf.PageSizeA4.H-pageBottom-18)
-	rect = &gopdf.Rect{W: w, H: 10}
-	err = t.pdf.CellWithOption(rect, footnote, gopdf.CellOption{Align: gopdf.Middle})
-	if err != nil {
-		return err
-	}
+	return nil
 }
 
 func (t *Table) WritePdf(filename string) error {

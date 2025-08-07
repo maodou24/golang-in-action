@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestTable(t *testing.T) {
 	rows := []TableRow{
@@ -14,5 +16,29 @@ func TestTable(t *testing.T) {
 		{"8", "移动硬盘", "1TB USB3.0移动硬盘，高速传输，便携耐用", "399", "180", "西部数据公司"},
 		{"9", "路由器", "WiFi6千兆路由器，多设备稳定连接", "599", "90", "TP-LINK公司"},
 		{"10", "打印机", "彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司"},
+	}
+
+	header := []TableColumn{
+		{Title: "ID", Width: 40},
+		{Title: "产品", Width: 66},
+		{Title: "描述", Width: 200},
+		{Title: "价格", Width: 40},
+		{Title: "排名", Width: 40},
+		{Title: "公司", Width: 80},
+	}
+
+	table, err := NewTable("Table", len(rows), header)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.DrawRow(rows...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.WritePdf("table.pdf")
+	if err != nil {
+		t.Fatal(err)
 	}
 }
