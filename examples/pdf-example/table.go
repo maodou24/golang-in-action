@@ -74,7 +74,7 @@ NewTable
  3. 文本超过列宽时自动换行
     1）列超过当前页面部分自动写到下一页
     2）未超过的列当前页面居中，下一样空白
- 4. 单元格文本左对齐且垂直居中
+ 4. 单元格文本左对齐且垂直居中左对齐
 */
 func NewTable(title string, total int, headers []TableColumn) (*Table, error) {
 	pdf := &gopdf.GoPdf{}
@@ -176,31 +176,33 @@ func (t *Table) drawRow(row TableRow) error {
 		return errors.New("no data in row")
 	}
 
-	fmt.Println("max", maxNum)
+	lineOffset := make([]float64, len(row))
 	rowMaxH := float64(maxNum) * cellTextH
 	for i := 0; i < maxNum; i++ {
 		y := t.pdf.GetY()
 
-		fmt.Print("row text start")
 		for j := range linesList {
 			if i >= len(linesList[j]) {
 				continue
 			}
 
-			var offset float64 = 0
+			// this logic is to middle the text in the cell
+			// row's first line, calculate line Y offset
 			if i == 0 && cellH[j] < min(rowMaxH, maxCellY-y) {
-				offset = (min(rowMaxH, maxCellY-y) - cellH[j]) / 2
+				lineOffset[j] = (min(rowMaxH, maxCellY-y) - cellH[j]) / 2
 			}
-			if y+offset+cellTextH > maxCellY {
+			if y+cellTextH > maxCellY {
 				if err := t.addPage(); err != nil {
 					return err
 				}
 				y = t.pdf.GetY()
-				offset = 0
+				// if line move to next page, should follow previous page, don't need offset to middle
+				if i != 0 {
+					lineOffset[j] = 0
+				}
 			}
 
-			t.pdf.SetXY(t.columnX[j]+textPadding, y+offset+textPadding)
-			fmt.Print(" ", t.pdf.GetY())
+			t.pdf.SetXY(t.columnX[j]+textPadding, y+lineOffset[j]+textPadding)
 
 			rect := &gopdf.Rect{W: t.headers[j].Width - 2*textPadding, H: cellTextH}
 			opt := gopdf.CellOption{Align: gopdf.Middle}
@@ -210,12 +212,10 @@ func (t *Table) drawRow(row TableRow) error {
 			}
 		}
 
-		fmt.Println()
 		t.pdf.SetXY(pagePadding, y+cellTextH)
 	}
 
 	t.pdf.SetXY(pagePadding, t.pdf.GetY()+2*textPadding)
-	fmt.Println("row end", t.pdf.GetY())
 
 	return nil
 }
@@ -230,8 +230,10 @@ func (t *Table) addPage() error {
 
 	t.pdf.AddPage()
 
-	t.addHeader()
-	t.pageRowStart = t.pageRowEnd + 1
+	err := t.addHeader()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -323,6 +325,7 @@ func (t *Table) addFooter() error {
 		return err
 	}
 
+	t.pageRowStart = t.pageRowEnd + 1
 	return nil
 }
 
