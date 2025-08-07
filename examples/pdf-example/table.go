@@ -188,8 +188,15 @@ func (t *Table) drawRow(row TableRow) error {
 
 			// this logic is to middle the text in the cell
 			// row's first line, calculate line Y offset
-			if i == 0 && cellH[j] < min(rowMaxH, maxCellY-y) {
-				lineOffset[j] = (min(rowMaxH, maxCellY-y) - cellH[j]) / 2
+			if i == 0 {
+				// 1. current page don't have enough space drow first line
+				// 2. current page can drow all lines in row
+				if y+cellTextH > maxCellY || y+rowMaxH < maxCellY {
+					lineOffset[j] = (rowMaxH - cellH[j]) / 2
+				} else {
+					// 3. some columns exceed current page
+					lineOffset[j] = max((min(rowMaxH, maxCellY-y)-cellH[j])/2, 0)
+				}
 			}
 			if y+cellTextH > maxCellY {
 				if err := t.addPage(); err != nil {
