@@ -1,49 +1,144 @@
 package main
 
 import (
+	"strconv"
 	"testing"
 )
 
-func TestTable(t *testing.T) {
-	rows := []TableRow{
-		{"1", "笔记本电脑", "高性能笔记本电脑，配备最新处理器和大容量内存", "5999", "150", "联想集团"},
-		{"2", "智能手机", "全面屏智能手机，高清摄像头，长续航电池", "3299", "300", "华为技术有限公司"},
-		{"3", "平板电脑", "轻薄便携式平板电脑，适合办公和娱乐使用", "2599", "80", "苹果公司"},
-		{"4", "智能手表", "多功能智能手表，支持健康监测和运动追踪", "1299", "200", "小米科技有限责任公司"},
-		{"5", "无线耳机", "降噪无线耳机，高音质，舒适佩戴", "899", "250", "索尼公司"},
-		{"6", "显示器", "27英寸4K显示器，色彩精准，适合设计和游戏", "2499", "50", "戴尔科技有限公司"},
-		{"7", "机械键盘", "RGB背光机械键盘，青轴，游戏办公两相宜", "499", "120", "罗技公司"},
-		{"8", "移动硬盘", "1TB USB3.0移动硬盘，高速传输，便携耐用", "399", "180", "西部数据公司"},
-		{"9", "路由器", "WiFi6千兆路由器，多设备稳定连接", "599", "90", "TP-LINK公司"},
-		{"10", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"11", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"12", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"13", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"14", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"15", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"16", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"17", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"18", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"19", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"20", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"21", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"22", "打印机", "Building and maintaining a font collection on the computer you use for design work is an important part of life as a designer. However, there are a number of ways this process can be optimized—primarily by understanding where font files live, but also by proactively organizing your collection with font management software. If you’ve embraced the world of variable fonts, there are a few additional considerations. We’ll cover all of that in this article, which is intended to serve as a universal guide for managing fonts, whether you’re working with static fonts, variable fonts, or a combination of both.", "1299", "60", "惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司 惠普公司"},
-		{"23", "打印机", "彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机， 支持无线打印和扫描 彩色喷墨打印机， 支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "Building and maintaining a font collection on the computer you use for design work is an important part of life as a designer. However, there are a number of ways this process can be optimized—primarily by understanding where font files live, but also by proactively organizing your collection with font management software. If you’ve embraced the world of variable fonts, there are a few additional considerations. We’ll cover all of that in this article, which is intended to serve as a universal guide for managing fonts, whether you’re working with static fonts, variable fonts, or a combination of both."},
-		{"24", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "Building and maintaining a font collection on the computer you use for design work is an important part of life as a designer. However, there are a number of ways this process can be optimized—primarily by understanding where font files live, but also by proactively organizing your collection with font management software. If you’ve embraced the world of variable fonts, there are a few additional considerations. We’ll cover all of that in this article, which is intended to serve as a universal guide for managing fonts, whether you’re working with static fonts, variable fonts, or a combination of both."},
-		{"25", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "Building and maintaining a font collection on the computer you use for design work is an important part of life as a designer. However, there are a number of ways this process can be optimized—primarily by understanding where font files live, but also by proactively organizing your collection with font management software. If you’ve embraced the world of variable fonts, there are a few additional considerations. We’ll cover all of that in this article, which is intended to serve as a universal guide for managing fonts, whether you’re working with static fonts, variable fonts, or a combination of both."},
-		{"26", "打印机", "彩色喷墨打印机，支持无线打印和扫描,, 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描 彩色喷墨打印机，支持无线打印和扫描", "1299", "60", "Building and maintaining a font collection on the computer you use for design work is an important part of life as a designer. However, there are a number of ways this process can be optimized—primarily by understanding where font files live, but also by proactively organizing your collection with font management software. If you’ve embraced the world of variable fonts, there are a few additional considerations. We’ll cover all of that in this article, which is intended to serve as a universal guide for managing fonts, whether you’re working with static fonts, variable fonts, or a combination of both."},
+func TestTableRowSingleLine(t *testing.T) {
+	rowNum := 100
+
+	rows := make([]TableRow, 0, rowNum)
+	for i := 0; i < rowNum; i++ {
+		rows = append(rows, TableRow{strconv.Itoa(i + 1)})
 	}
 
-	header := []TableColumn{
-		{Title: "ID", Width: 40},
-		{Title: "产品", Width: 66},
-		{Title: "描述", Width: 200},
-		{Title: "价格", Width: 40},
-		{Title: "排名", Width: 40},
-		{Title: "公司", Width: 80},
+	headers := []TableColumn{
+		{Title: "ID", Width: 20},
 	}
 
-	table, err := NewTable("Table", len(rows), header)
+	table, err := NewTable("test", rowNum, headers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range rows {
+		err = table.DrawRow(rows[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	err = table.WritePdf("table.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTableRowFirstLineMorePage(t *testing.T) {
+	rowNum := 400
+
+	var str string
+	for i := 0; i < rowNum; i++ {
+		str += strconv.Itoa(i + 1)
+	}
+
+	headers := []TableColumn{
+		{Title: "ID", Width: 20},
+	}
+
+	table, err := NewTable("test", 1, headers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.DrawRow(TableRow{str})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.WritePdf("table.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTableRowLineMorePage(t *testing.T) {
+	rowNum := 400
+
+	var str string
+	for i := 0; i < rowNum; i++ {
+		str += strconv.Itoa(i + 1)
+	}
+
+	headers := []TableColumn{
+		{Title: "ID", Width: 20},
+	}
+
+	table, err := NewTable("test", 3, headers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.DrawRow([]TableRow{{"0"}, {str}, {"last"}}...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.WritePdf("table.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTableRowToNextPage(t *testing.T) {
+	rowNum := 400
+
+	var str string
+	for i := 0; i < rowNum; i++ {
+		str += strconv.Itoa(i + 1)
+	}
+
+	headers := []TableColumn{
+		{Title: "ID", Width: 20},
+	}
+
+	table, err := NewTable("test", 1, headers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.DrawRow(TableRow{str})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = table.WritePdf("table.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTableRowToNextPageMiddle(t *testing.T) {
+	rowNum := 35
+
+	rows := make([]TableRow, 0, rowNum)
+	for i := 0; i < rowNum; i++ {
+		rows = append(rows, TableRow{strconv.Itoa(i + 1)})
+	}
+
+	var row string
+	for i := 0; i < 30; i++ {
+		row += strconv.Itoa(i + 1)
+	}
+
+	rows = append(rows, TableRow{row})
+
+	headers := []TableColumn{
+		{Title: "ID", Width: 20},
+	}
+
+	table, err := NewTable("test", len(rows), headers)
 	if err != nil {
 		t.Fatal(err)
 	}

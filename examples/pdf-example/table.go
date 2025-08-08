@@ -136,11 +136,20 @@ func (t *Table) DrawRow(rows ...TableRow) error {
 		return err
 	}
 	for i := range rows {
+		moveToNextPage := t.pdf.GetY()+cellTextH > maxCellY
+		if !moveToNextPage {
+			t.pageRowEnd++
+		}
+
 		err = t.drawRow(rows[i])
 		if err != nil {
 			return err
 		}
-		t.pageRowEnd++
+
+		if moveToNextPage {
+			t.pageRowEnd++
+		}
+		//t.pageRowEnd++
 	}
 	return nil
 }
@@ -228,7 +237,7 @@ func (t *Table) drawRow(row TableRow) error {
 }
 
 func (t *Table) addPage() error {
-	if t.pageRowEnd > 1 {
+	if t.pageRowEnd > 0 {
 		err := t.addFooter()
 		if err != nil {
 			return err
@@ -332,7 +341,12 @@ func (t *Table) addFooter() error {
 		return err
 	}
 
-	t.pageRowStart = t.pageRowEnd + 1
+	if t.total > t.pageRowEnd {
+		t.pageRowStart = t.pageRowEnd + 1
+	} else {
+		t.pageRowStart = t.pageRowEnd
+	}
+
 	return nil
 }
 
