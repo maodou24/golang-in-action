@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strconv"
+	"fmt"
 	"testing"
 )
 
@@ -10,11 +10,11 @@ func TestTableRowSingleLine(t *testing.T) {
 
 	rows := make([]TableRow, 0, rowNum)
 	for i := 0; i < rowNum; i++ {
-		rows = append(rows, TableRow{strconv.Itoa(i + 1)})
+		rows = append(rows, TableRow{fmt.Sprintf("row1-line%v\n", i+1)})
 	}
 
 	headers := []TableColumn{
-		{Title: "ID", Width: 20},
+		{Title: "ID", Width: 60},
 	}
 
 	table, err := NewTable("test", rowNum, headers)
@@ -40,11 +40,11 @@ func TestTableRowFirstLineMorePage(t *testing.T) {
 
 	var str string
 	for i := 0; i < rowNum; i++ {
-		str += strconv.Itoa(i + 1)
+		str += fmt.Sprintf("row1-line%v\n", i+1)
 	}
 
 	headers := []TableColumn{
-		{Title: "ID", Width: 20},
+		{Title: "ID", Width: 60},
 	}
 
 	table, err := NewTable("test", 1, headers)
@@ -68,11 +68,11 @@ func TestTableRowLineMorePage(t *testing.T) {
 
 	var str string
 	for i := 0; i < rowNum; i++ {
-		str += strconv.Itoa(i + 1)
+		str += fmt.Sprintf("row2-line%v\n", i+1)
 	}
 
 	headers := []TableColumn{
-		{Title: "ID", Width: 20},
+		{Title: "ID", Width: 60},
 	}
 
 	table, err := NewTable("test", 3, headers)
@@ -80,35 +80,7 @@ func TestTableRowLineMorePage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = table.DrawRow([]TableRow{{"0"}, {str}, {"last"}}...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = table.WritePdf("table.pdf")
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestTableRowToNextPage(t *testing.T) {
-	rowNum := 400
-
-	var str string
-	for i := 0; i < rowNum; i++ {
-		str += strconv.Itoa(i + 1)
-	}
-
-	headers := []TableColumn{
-		{Title: "ID", Width: 20},
-	}
-
-	table, err := NewTable("test", 1, headers)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = table.DrawRow(TableRow{str})
+	err = table.DrawRow([]TableRow{{"row1"}, {str}, {"row3"}}...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,18 +96,18 @@ func TestTableRowToNextPageMiddle(t *testing.T) {
 
 	rows := make([]TableRow, 0, rowNum)
 	for i := 0; i < rowNum; i++ {
-		rows = append(rows, TableRow{strconv.Itoa(i + 1)})
+		rows = append(rows, TableRow{fmt.Sprintf("row1-line%v\n", i+1)})
 	}
 
 	var row string
 	for i := 0; i < 30; i++ {
-		row += strconv.Itoa(i + 1)
+		row += fmt.Sprintf("row2-line%v\n", i+1)
 	}
 
 	rows = append(rows, TableRow{row})
 
 	headers := []TableColumn{
-		{Title: "ID", Width: 20},
+		{Title: "ID", Width: 60},
 	}
 
 	table, err := NewTable("test", len(rows), headers)

@@ -62,7 +62,7 @@ type Table struct {
 	pdf       *gopdf.GoPdf
 
 	pageRowStart int
-	pageRowEnd   int
+	pageCount    int
 	total        int
 }
 
@@ -112,18 +112,20 @@ func NewTable(title string, total int, headers []TableColumn) (*Table, error) {
 	}
 
 	table := &Table{
-		pdf:          pdf,
-		imgHolder:    imgHolder,
-		headers:      headers,
-		title:        title,
-		columnX:      columnX,
-		total:        total,
-		pageRowStart: 1,
-		startTime:    time.Now().Format(time.DateTime),
-		headerRow:    headerRow,
+		pdf:       pdf,
+		imgHolder: imgHolder,
+		headers:   headers,
+		title:     title,
+		columnX:   columnX,
+		total:     total,
+		startTime: time.Now().Format(time.DateTime),
+		headerRow: headerRow,
 	}
 
-	err = table.addPage()
+	pdf.AddPage()
+	table.pageCount = 0
+
+	err = table.addHeader()
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +140,7 @@ func (t *Table) DrawRow(rows ...TableRow) error {
 	for i := range rows {
 		moveToNextPage := t.pdf.GetY()+cellTextH > maxCellY
 		if !moveToNextPage {
-			t.pageRowEnd++
+			t.pageCount++
 		}
 
 		err = t.drawRow(rows[i])
@@ -147,9 +149,8 @@ func (t *Table) DrawRow(rows ...TableRow) error {
 		}
 
 		if moveToNextPage {
-			t.pageRowEnd++
+			t.pageCount++
 		}
-		//t.pageRowEnd++
 	}
 	return nil
 }
@@ -237,19 +238,19 @@ func (t *Table) drawRow(row TableRow) error {
 }
 
 func (t *Table) addPage() error {
-	if t.pageRowEnd > 0 {
-		err := t.addFooter()
-		if err != nil {
-			return err
-		}
+	err := t.addFooter()
+	if err != nil {
+		return err
 	}
 
 	t.pdf.AddPage()
 
-	err := t.addHeader()
+	err = t.addHeader()
 	if err != nil {
 		return err
 	}
+
+	t.pageCount = 0
 	return nil
 }
 
@@ -289,7 +290,7 @@ func (t *Table) addHeader() error {
 		return err
 	}
 
-	// jci log
+	// logo
 	err = t.pdf.ImageByHolder(t.imgHolder, imgX, pagePadding, &gopdf.Rect{W: imgW, H: imgH})
 	if err != nil {
 		return err
@@ -313,6 +314,8 @@ func (t *Table) addHeader() error {
 		return err
 	}
 
+	t.pageRowStart += t.pageCount
+
 	return nil
 }
 
@@ -322,7 +325,12 @@ func (t *Table) addFooter() error {
 		return err
 	}
 
-	pageText := fmt.Sprintf("%v-%v of %v", t.pageRowStart, t.pageRowEnd, t.total)
+	var pageText string
+	if t.pageCount > 0 {
+		pageText = fmt.Sprintf("%v-%v of %v", t.pageRowStart+1, t.pageRowStart+t.pageCount, t.total)
+	} else {
+		pageText = fmt.Sprintf("%v-%v of %v", t.pageRowStart, t.pageRowStart, t.total)
+	}
 	t.pdf.SetXY(pagePadding, pageH-pageBottom-footerH)
 	rect := &gopdf.Rect{W: footerW, H: footerH}
 	err = t.pdf.CellWithOption(rect, pageText, gopdf.CellOption{Align: gopdf.Middle})
@@ -339,12 +347,6 @@ func (t *Table) addFooter() error {
 	err = t.pdf.CellWithOption(rect, footnote, gopdf.CellOption{Align: gopdf.Middle})
 	if err != nil {
 		return err
-	}
-
-	if t.total > t.pageRowEnd {
-		t.pageRowStart = t.pageRowEnd + 1
-	} else {
-		t.pageRowStart = t.pageRowEnd
 	}
 
 	return nil
