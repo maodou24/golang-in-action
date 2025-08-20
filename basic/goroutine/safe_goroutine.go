@@ -1,7 +1,7 @@
 package goroutine
 
 import (
-	"log"
+	"fmt"
 	"sync"
 )
 
@@ -9,7 +9,7 @@ func SafeGo(fn func()) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("recover goroutine panic: %v", r)
+				fmt.Printf("recover goroutine panic: %v\n", r)
 			}
 		}()
 
@@ -19,11 +19,12 @@ func SafeGo(fn func()) {
 
 func SafeGoLoop(fn func()) {
 	go func() {
+		var n int
 		for {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						log.Printf("recover goroutine panic: %v", r)
+						fmt.Printf("recover goroutine panic: %v\n", r)
 					}
 				}()
 
@@ -31,6 +32,10 @@ func SafeGoLoop(fn func()) {
 			}()
 
 			// add some loop condition to avoid infinite loop
+			if n > 5 {
+				break
+			}
+			n++
 		}
 	}()
 }
@@ -43,7 +48,7 @@ func SafeGoFuncs(funcs ...func()) {
 			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
-					log.Printf("recover goroutine panic: %v", r)
+					fmt.Printf("recover goroutine panic: %v\n", r)
 				}
 			}()
 

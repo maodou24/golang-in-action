@@ -43,3 +43,7 @@ func TestProducerConsumer(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestGoWithoutRecover(t *testing.T) {
+	GoWithoutRecover()
+}

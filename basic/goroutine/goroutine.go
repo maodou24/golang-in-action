@@ -3,6 +3,7 @@ package goroutine
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 // 交替打印AB 10次
@@ -36,4 +37,20 @@ func PrintAB() {
 	wg.Wait()
 	close(ch1)
 	close(ch2)
+}
+
+// panic not catch, the program dies
+func GoWithoutRecover() {
+	go func() {
+		panic("test panic")
+	}()
+
+	go func() {
+		for {
+			fmt.Println("hello world")
+			time.Sleep(time.Second)
+		}
+	}()
+
+	time.Sleep(time.Second * 10)
 }
