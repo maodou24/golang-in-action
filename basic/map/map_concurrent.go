@@ -31,6 +31,7 @@ func ConcurrentReadMap() {
 	wg.Wait()
 }
 
+// one goroutine read, another goroutine write
 func ConcurrentReadWriteMap() {
 	var m = map[int]string{
 		1: "one",
@@ -49,7 +50,7 @@ func ConcurrentReadWriteMap() {
 	go func() {
 		defer wg.Done()
 		for {
-			fmt.Println(m[1])
+			_ = m[1]
 		}
 	}()
 
@@ -74,8 +75,8 @@ func RWMapWithRWLock() {
 	}()
 
 	for i := 0; i < 5; i++ {
-		go func(){
-			ticker := time.NewTicker(time.Microsecond* 300)
+		go func() {
+			ticker := time.NewTicker(time.Microsecond * 300)
 			for range ticker.C {
 				rwMutex.RLock()
 				_ = m[1] // read
