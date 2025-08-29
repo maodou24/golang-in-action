@@ -12,6 +12,7 @@ import (
 func main() {
 	e := gin.New()
 
+	// middleware support
 	e.Use(gin.Recovery())
 	e.Use(gin.Logger())
 	e.Use(cors.Default())
@@ -44,6 +45,7 @@ func main() {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		ctx.JSON(http.StatusOK, gin.H{"sum": p.A + p.B})
 	})
 
 	// GET /path/maodou
