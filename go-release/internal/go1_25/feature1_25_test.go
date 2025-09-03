@@ -5,7 +5,3 @@ import "testing"
 func TestWaitGroupGo(t *testing.T) {
 	WaitGroupGo()
 }
-
-func TestIterateSliceInClose(t *testing.T) {
-	IterateSliceInClose()
-}

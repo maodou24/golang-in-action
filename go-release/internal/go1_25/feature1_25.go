@@ -25,16 +25,3 @@ func WaitGroupGo() {
 
 	wg.Wait()
 }
-
-func IterateSliceInClose() {
-	var s []int
-	for i := 0; i < 10; i++ {
-		s = append(s, i)
-	}
-
-	for v := range s {
-		defer func() {
-			fmt.Println(v)
-		}()
-	}
-}
