@@ -1,6 +1,7 @@
 package chainid
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -8,46 +9,48 @@ import (
 
 type TaskID string
 
-type Task struct {
+type Device struct {
 	ID           TaskID
 	Execute      func() error
 	Dependencies []TaskID
-	State        TaskState
+	State        DeviceState
 
 	// result
 	Err error
 }
 
-type TaskState int
+type DeviceState int
 
 const (
-	TaskStatePending TaskState = iota
+	TaskStatePending DeviceState = iota
 	TaskStateRunning
 	TaskStateCompleted
 	TaskStateFailed
 )
 
 type Batch struct {
-	tasks    map[TaskID]*Task
+	devices  map[TaskID]*Device
 	mu       sync.RWMutex
 	notifier chan TaskID
 	count    int
+	ctx      context.Context
 
-	queue chan *Task
+	queue chan *Device
 }
 
-func NewWorkflow() *Batch {
+func NewBatch(ctx context.Context) *Batch {
 	return &Batch{
-		tasks:    make(map[TaskID]*Task, 10),
+		devices:  make(map[TaskID]*Device, 10),
 		notifier: make(chan TaskID, 100),
-		queue:    make(chan *Task, 100),
+		queue:    make(chan *Device, 100),
+		ctx:      ctx,
 	}
 }
 
-func (w *Batch) AddTask(task *Task) {
+func (w *Batch) Add(d *Device) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	w.tasks[task.ID] = task
+	w.devices[d.ID] = d
 }
 
 func (w *Batch) Start() error {
@@ -58,7 +61,10 @@ func (w *Batch) Start() error {
 	wg.Go(func() {
 		for i := 0; i < 5; i++ {
 			go func() {
-				for task := range w.queue {
+				select {
+				case <-w.ctx.Done():
+					return
+				case task := <-w.queue:
 					go w.executeTask(task)
 				}
 			}()
@@ -67,7 +73,7 @@ func (w *Batch) Start() error {
 	})
 
 	w.mu.RLock()
-	for _, task := range w.tasks {
+	for _, task := range w.devices {
 		if len(task.Dependencies) == 0 && task.State == TaskStatePending {
 			w.queue <- task
 		}
@@ -79,7 +85,7 @@ func (w *Batch) Start() error {
 	return nil
 }
 
-func (w *Batch) executeTask(task *Task) {
+func (w *Batch) executeTask(task *Device) {
 	w.mu.Lock()
 	task.State = TaskStateRunning
 	w.mu.Unlock()
@@ -103,26 +109,31 @@ func (w *Batch) executeTask(task *Task) {
 }
 
 func (w *Batch) waitForExecution() {
-	for completedTaskID := range w.notifier {
-		w.mu.RLock()
-		for _, task := range w.tasks {
-			if contains(task.Dependencies, completedTaskID) && w.canStart(task) {
-				w.queue <- task
-			}
-		}
-		w.mu.RUnlock()
-
-		w.count++
-		if w.count == len(w.tasks) {
-			close(w.queue)
+	for {
+		select {
+		case <-w.ctx.Done():
 			return
+		case completedTaskID := <-w.notifier:
+			w.mu.RLock()
+			for _, task := range w.devices {
+				if contains(task.Dependencies, completedTaskID) && w.canStart(task) {
+					w.queue <- task
+				}
+			}
+			w.mu.RUnlock()
+
+			w.count++
+			if w.count == len(w.devices) {
+				close(w.queue)
+				return
+			}
 		}
 	}
 }
 
-func (w *Batch) canStart(task *Task) bool {
+func (w *Batch) canStart(task *Device) bool {
 	for _, depID := range task.Dependencies {
-		if dep, exists := w.tasks[depID]; !exists || dep.State != TaskStateCompleted {
+		if dep, exists := w.devices[depID]; !exists || dep.State != TaskStateCompleted {
 			return false
 		}
 	}
@@ -141,14 +152,14 @@ func contains(slice []TaskID, item TaskID) bool {
 type TrieNode struct {
 	IsEnd    bool
 	ChainID  ChainID
-	Task     *Task
+	Task     *Device
 	Children map[string]*TrieNode
 }
 
-func NewTrieNode(tasks []*Task) *TrieNode {
+func NewTrieNode(devices []*Device) *TrieNode {
 	root := &TrieNode{Children: make(map[string]*TrieNode)}
 
-	for _, task := range tasks {
+	for _, task := range devices {
 		parts := strings.Split(string(task.ID), ".")
 		node := root
 		for _, part := range parts {

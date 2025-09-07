@@ -1,11 +1,13 @@
 package chainid
 
 import (
+	"context"
 	"testing"
+	"time"
 )
 
 func TestChainID(t *testing.T) {
-	tasks := []*Task{
+	tasks := []*Device{
 		{ID: "1"},
 		{ID: "1.1"},
 		{ID: "1.2"}, {ID: "1.2.2"}, {ID: "1.2.3"},
@@ -14,7 +16,9 @@ func TestChainID(t *testing.T) {
 	}
 	root := NewTrieNode(tasks)
 
-	wf := NewWorkflow()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	wf := NewBatch(ctx)
 
 	var dfs func(node *TrieNode) []TaskID
 	dfs = func(node *TrieNode) []TaskID {
@@ -34,7 +38,7 @@ func TestChainID(t *testing.T) {
 				return nil
 			}
 
-			wf.AddTask(node.Task)
+			wf.Add(node.Task)
 			s = append(s, node.Task.ID)
 		}
 		return s
