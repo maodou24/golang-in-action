@@ -1,4 +1,4 @@
-package archives
+package _archive
 
 import (
 	"archive/zip"
@@ -21,4 +21,13 @@ func TestAddFileToZip(t *testing.T) {
 	err = AddFileToZip(zw, paths...)
 	assert.NoError(t, err)
 	defer zw.Close()
+}
+
+func TestExtractZip(t *testing.T) {
+	zr, err := zip.OpenReader("./testdata/test.zip")
+	assert.NoError(t, err)
+	defer zr.Close()
+
+	err = ExtractZip(zr, "./testdata/zipdir")
+	assert.NoError(t, err)
 }
