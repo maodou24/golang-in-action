@@ -1,4 +1,4 @@
-package goroutine
+package _goroutine
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 
 // 交替打印AB 10次
 func PrintAB() {
-	ch1 := make(chan int, 1)
-	ch2 := make(chan int, 1)
+	ch1 := make(chan struct{}, 1)
+	ch2 := make(chan struct{}, 1)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -19,7 +19,7 @@ func PrintAB() {
 		for i := 0; i < 10; i++ {
 			_ = <-ch1
 			fmt.Print("A")
-			ch2 <- 1
+			ch2 <- struct{}{}
 		}
 	}()
 	go func() {
@@ -28,11 +28,11 @@ func PrintAB() {
 		for i := 0; i < 10; i++ {
 			_ = <-ch2
 			fmt.Print("B")
-			ch1 <- 1
+			ch1 <- struct{}{}
 		}
 	}()
 
-	ch1 <- 1
+	ch1 <- struct{}{}
 
 	wg.Wait()
 	close(ch1)
