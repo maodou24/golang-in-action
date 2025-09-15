@@ -42,5 +42,6 @@ build/
 
 **/*.pdf
 **/*.log
+**/*.csv
 
 **/testdata/*
