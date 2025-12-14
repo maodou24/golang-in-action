@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  # Array of commands
+  build:
+    - go mod tidy
+    - go build -o app2 ./
