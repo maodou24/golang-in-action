@@ -12,3 +12,9 @@ func TestPanicNilPointer(t *testing.T) {
 	}()
 	panic(nil)
 }
+
+func TestSetGlobalCatchPanic(t *testing.T) {
+	SetGlobalCatchPanic()
+	panic("test panic")
+	select {}
+}
