@@ -1,4 +1,4 @@
-package standard_library
+package _encoding
 
 import "encoding/json"
 
