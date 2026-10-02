@@ -35,11 +35,12 @@ func (l *LRU) Get(key string) any {
 }
 
 // key已存在：
-// 		1. 更新key对应的value值
-//      2. 将key移到队尾
+//  1. 更新key对应的value值
+//  2. 将key移到队尾
+//
 // key不存在：
-//		1. 判断size是否超过cap，超过时需要删除最久的
-// 		2. 将key添加到队尾
+//  1. 判断size是否超过cap，超过时需要删除最久的
+//  2. 将key添加到队尾
 func (l *LRU) Put(key string, v any) {
 	ele, ok := l.keys[key]
 	if ok {
