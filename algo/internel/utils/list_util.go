@@ -1,6 +1,6 @@
 package utils
 
-import "github.com/maodou/go-leaning/algo/internel/list"
+import "github.com/maodou24/go-leaning/algo/internel/list"
 
 func NewList(s []int) *list.Node {
 	head := &list.Node{}

@@ -1,6 +1,6 @@
 package queue
 
-import "github.com/maodou/go-leaning/algo/structure/stack"
+import "github.com/maodou24/go-leaning/algo/structure/stack"
 
 func NewQueueWithStack() *queueWithStack {
 	return &queueWithStack{A: stack.NewLinearStack(), B: stack.NewLinearStack()}

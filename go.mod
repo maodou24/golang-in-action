@@ -1,4 +1,4 @@
-module github.com/maodou/go-leaning
+module github.com/maodou24/go-leaning
 
 go 1.25.5
 

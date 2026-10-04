@@ -3,7 +3,7 @@
 ## single app
 
 ```text
-my-microservice/                  # 服务根目录
+my-microservice/                 # 服务根目录
 ├── cmd/                         # 主程序入口
 │   └── server/                  # 服务主程序
 │       ├── main.go              # 入口文件
@@ -146,3 +146,8 @@ monorepo/                          # 项目根目录
     ├── api/                       # API文档
     └── development/               # 开发指南
 ```
+
+## Reference
+
+[golang-standards/project-layout](https://github.com/golang-standards/project-layout)
+[go-kratos/kratos-layout](https://github.com/go-kratos/kratos-layout)

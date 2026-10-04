@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-	"github.com/maodou/go-leaning/standard-library/database/model"
+	"github.com/maodou24/go-leaning/standard-library/database/model"
 )
 
 func TestDatabasePostgreSQL(t *testing.T) {
