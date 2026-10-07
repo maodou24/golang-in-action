@@ -46,3 +46,7 @@ flowchart TD
 - API `request` / `response` 定义对外数据契约，与 `model` 分离；需要时由 `controller` 或 `service` 显式转换，避免把数据库模型直接暴露为 API。
 
 依赖方向保持由入口和编排层指向被调用层，底层包不要反向导入上层包，也不要形成循环依赖。
+
+## Reference
+
+[wannanbigpig/gin-layout](https://github.com/wannanbigpig/gin-layout)
