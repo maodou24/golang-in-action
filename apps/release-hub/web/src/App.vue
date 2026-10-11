@@ -71,6 +71,7 @@
       </a-button>
       <div class="main-header-title">Repo Manifest 管理台</div>
       <div class="header-spacer" />
+      <NamespaceSettings @changed="onNamespacesChanged" />
       <a-dropdown v-if="savedUser" :trigger="['click']">
         <a-button type="text" class="account-button">
           <a-avatar class="account-avatar">{{ accountInitial }}</a-avatar>
@@ -343,11 +344,6 @@
                   >
                   <a-button
                     danger
-                    @click="deleteNamespaceConfig"
-                    >删除 Namespace</a-button
-                  >
-                  <a-button
-                    danger
                     :disabled="!projectUpdateForm.projectName"
                     @click="deleteProjectConfig"
                     >删除项目</a-button
@@ -358,6 +354,7 @@
 
             <ReleaseForm
               v-else-if="activeSection === 'branch-create'"
+              :key="namespaceRevision"
               @created="onCreated"
             />
 
@@ -540,7 +537,7 @@
 
     <a-modal
       :open="projectCommitModalOpen"
-      :title="projectCommitMode === 'delete-namespace' ? '确认删除 Namespace' : projectCommitMode === 'delete' ? '确认删除项目' : '提交信息'"
+      :title="projectCommitMode === 'delete' ? '确认删除项目' : '提交信息'"
       ok-text="提交"
       cancel-text="取消"
       :confirm-loading="projectCommitSaving"
@@ -554,27 +551,6 @@
           type="warning"
           show-icon
           message="将删除该项目的整个目录，包括 default.xml 和 releases 文件夹。"
-          style="margin-bottom: 16px"
-        />
-        <a-alert
-          v-else-if="projectCommitMode === 'delete-namespace'"
-          type="warning"
-          show-icon
-          message="将删除该 Namespace 及其下的所有项目和 manifest 文件。"
-          style="margin-bottom: 16px"
-        />
-        <template v-if="projectCommitMode === 'delete-namespace' && namespaceProjectsToDelete.length">
-          <div class="namespace-projects-title">将删除以下项目：</div>
-          <ul class="namespace-projects-list">
-            <li v-for="project in namespaceProjectsToDelete" :key="project.projectName">
-              {{ project.projectName }}
-            </li>
-          </ul>
-        </template>
-        <a-alert
-          v-else-if="projectCommitMode === 'delete-namespace'"
-          type="info"
-          message="当前 Namespace 下没有可展示的项目。"
           style="margin-bottom: 16px"
         />
         <a-form-item label="Summary" required>
@@ -671,7 +647,6 @@ import {
   resolveProject,
   createProject,
   deleteProject,
-  deleteNamespace,
   deleteProjectVersion,
   getCurrentUser,
   getProjectVersion,
@@ -691,6 +666,7 @@ import type {
   UserProfile,
 } from "./types/release";
 import ReleaseForm from "./components/ReleaseForm.vue";
+import NamespaceSettings from "./components/NamespaceSettings.vue";
 import {
   AppstoreOutlined,
   BranchesOutlined,
@@ -702,6 +678,7 @@ import {
 const collapsed = ref(false);
 const settingsOpen = ref(false);
 const settingsSaving = ref(false);
+const namespaceRevision = ref(0);
 const task = ref<ReleaseTask | null>(null);
 const savedUser = ref<UserProfile | null>(null);
 const accountInitial = computed(() => savedUser.value?.githubLogin.charAt(0).toUpperCase() ?? "G");
@@ -716,7 +693,7 @@ const openKeys = ref<string[]>(["project-management", "branch-management"]);
 const projectCommitModalOpen = ref(false);
 const projectCommitSaving = ref(false);
 const projectCommitMode = ref<
-  "create" | "update" | "delete" | "delete-namespace" | "version" | "version-delete"
+  "create" | "update" | "delete" | "version" | "version-delete"
 >("create");
 const projectCommitForm = reactive({
   summary: "",
@@ -749,7 +726,6 @@ interface ProjectTemplate {
 
 const projectUpdateTemplates = ref<ProjectTemplate[]>([]);
 const branchConfigTemplates = ref<ProjectTemplate[]>([]);
-const namespaceProjectsToDelete = ref<ProjectTemplate[]>([]);
 const rootNamespaces = ref<string[]>([]);
 
 const projectCreateForm = ref({
@@ -1218,26 +1194,6 @@ function deleteProjectConfig() {
   projectCommitModalOpen.value = true;
 }
 
-async function deleteNamespaceConfig() {
-  const namespace = projectUpdateForm.value.namespace;
-  projectCommitMode.value = "delete-namespace";
-  projectCommitForm.summary = `chore(manifest): delete namespace ${namespace}`;
-  projectCommitForm.description = "delete namespace and all projects";
-
-  if (!namespace) {
-    namespaceProjectsToDelete.value = [];
-    projectCommitModalOpen.value = true;
-    return;
-  }
-  try {
-    namespaceProjectsToDelete.value = toProjectTemplates(await listProjects(namespace));
-    projectCommitModalOpen.value = true;
-  } catch (err: any) {
-    namespaceProjectsToDelete.value = [];
-    showError(err, "Failed to load projects");
-  }
-}
-
 function cancelProjectCommit() {
   projectCommitModalOpen.value = false;
 }
@@ -1258,7 +1214,7 @@ async function confirmProjectCommit() {
     if (projectCommitMode.value === "create") {
       const payload: ProjectRequest = {
         namespace: projectCreateForm.value.namespace,
-        namespaceId: resolveNamespaceID(projectCreateForm.value.namespace),
+        namespaceName: projectCreateForm.value.namespace,
         projectName: projectCreateForm.value.projectName,
         dependencies: projectCreateDependencies.value.map((d) => ({
           repoUrl: d.repoUrl,
@@ -1325,20 +1281,6 @@ async function confirmProjectCommit() {
         },
       );
       showSuccess("发布版本和远程分支已删除");
-    } else if (projectCommitMode.value === "delete-namespace") {
-      const namespace = projectUpdateForm.value.namespace;
-      await deleteNamespace(namespace, {
-        commitSummary: projectCommitForm.summary.trim(),
-        commitDescription: projectCommitForm.description.trim(),
-      });
-      showSuccess(`Namespace 已删除: ${namespace}`);
-      resetProjectUpdateForm();
-      projectUpdateTemplates.value = [];
-	  if (branchConfigForm.value.namespace === namespace) {
-		resetBranchConfig();
-		branchConfigTemplates.value = [];
-	  }
-      await loadNamespaces();
     } else {
       const projectName = projectUpdateForm.value.projectName;
 	  const namespace = projectUpdateForm.value.namespace;
@@ -1384,7 +1326,7 @@ function getBackendError(err: any, fallback: string) {
   if (typeof data === "string" && data.trim()) {
     return data;
   }
-  return data?.error ?? data?.message ?? err?.message ?? fallback;
+  return data?.msg ?? data?.error ?? data?.message ?? err?.message ?? fallback;
 }
 
 function showError(err: any, fallback: string) {
@@ -1455,6 +1397,24 @@ async function loadNamespaces() {
   } catch (err: any) {
     rootNamespaces.value = [];
     showError(err, "Failed to load namespaces");
+  }
+}
+
+async function onNamespacesChanged(change: { oldName?: string; newName?: string }) {
+  if (change.oldName && projectCreateForm.value.namespace === change.oldName) {
+    projectCreateForm.value.namespace = change.newName ?? "";
+  }
+  // Discard selections backed by the old names; all relationships still use stable IDs.
+  resetProjectUpdateForm();
+  resetBranchConfig();
+  projectUpdateTemplates.value = [];
+  branchConfigTemplates.value = [];
+  namespaceRevision.value += 1;
+  try {
+    rootNamespaces.value = await listNamespaces();
+    await refreshProjects();
+  } catch (err: unknown) {
+    showError(err, "刷新 Namespace 配置失败");
   }
 }
 

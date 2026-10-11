@@ -14,7 +14,13 @@ import (
 )
 
 func CreateProject(ctx context.Context, projectReq req.ProjectReq) (*resp.Project, error) {
-	namespace, err := model.GetNamespace(ctx, projectReq.NamespaceID)
+	var namespace *model.Namespace
+	var err error
+	if projectReq.NamespaceID != 0 {
+		namespace, err = model.GetNamespace(ctx, projectReq.NamespaceID)
+	} else {
+		namespace, err = model.GetOrCreateNamespace(ctx, projectReq.NamespaceName)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("get namespace: %w", err)
 	}
@@ -112,7 +118,8 @@ func assembleProject(ctx context.Context, project *model.Project, namespace *mod
 		UpdatedAt:   project.UpdatedAt,
 		Name:        project.Name,
 		NamespaceID: project.NamespaceID,
-		Namespace:   toNamespaceResponse(*namespace), Releases: views,
+		Namespace:   toNamespaceResponse(*namespace),
+		Releases:    views,
 	}, nil
 }
 

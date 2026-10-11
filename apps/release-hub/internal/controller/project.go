@@ -29,6 +29,17 @@ func CreateProject(c *gin.Context) {
 	}
 
 	projectReq.NamespaceID = namespaceID
+	if projectReq.NamespaceName != "" {
+		namespace, err := service.GetOrCreateNamespace(c.Request.Context(), projectReq.NamespaceName)
+		if err != nil {
+			writeServiceError(c, err)
+			return
+		}
+		if namespace.ID != namespaceID {
+			writeError(c, http.StatusBadRequest, "namespaceId does not match namespaceName")
+			return
+		}
+	}
 	project, err := service.CreateProject(c.Request.Context(), projectReq)
 	if err != nil {
 		writeServiceError(c, err)
@@ -150,22 +161,6 @@ func DeleteProject(c *gin.Context) {
 		return
 	}
 	if err := service.DeleteProject(c.Request.Context(), projectID); err != nil {
-		writeServiceError(c, err)
-		return
-	}
-	c.JSON(http.StatusOK, resp.Success(nil))
-}
-
-func DeleteNamespace(c *gin.Context) {
-	if _, ok := middleware.UserID(c); !ok {
-		writeError(c, http.StatusUnauthorized, "user session required")
-		return
-	}
-	namespaceID, ok := routeID(c, "namespaceId")
-	if !ok {
-		return
-	}
-	if err := service.DeleteNamespace(c.Request.Context(), namespaceID); err != nil {
 		writeServiceError(c, err)
 		return
 	}

@@ -1,10 +1,15 @@
 package request
 
 type ProjectReq struct {
-	NamespaceID  uint            `json:"namespaceId,omitempty"`
-	ProjectID    uint            `json:"projectId,omitempty"`
-	ProjectName  string          `json:"projectName,omitempty"`
-	Dependencies []DependencyReq `json:"dependencies"`
+	NamespaceID   uint            `json:"namespaceId,omitempty"`
+	NamespaceName string          `json:"namespaceName,omitempty"`
+	ProjectID     uint            `json:"projectId,omitempty"`
+	ProjectName   string          `json:"projectName,omitempty"`
+	Dependencies  []DependencyReq `json:"dependencies"`
+}
+
+type NamespaceReq struct {
+	Name string `json:"name"`
 }
 
 type DependencyReq struct {

@@ -9,15 +9,14 @@ import (
 func New(sessionSecret string) *gin.Engine {
 	r := gin.Default()
 
-	// r.GET("/healthz", handler.Health)
-	// r.GET("/:namespace/:projectName/:version/manifest.xml", projectHandler.GetManifest)
-
 	api := r.Group("/api")
 	api.Use(middleware.SessionAuth(sessionSecret))
 	{
 		api.POST("/users", c.UpsertUserHandler)
 		api.GET("/users/me", c.CurrentUser)
 		api.GET("/namespaces", c.QueryNamespacesHandler)
+		api.POST("/namespaces", c.CreateNamespace)
+		api.PUT("/namespaces/:namespaceId", c.UpdateNamespace)
 		api.DELETE("/namespaces/:namespaceId", c.DeleteNamespace)
 		api.POST("/namespaces/:namespaceId/projects", c.CreateProject)
 		api.GET("/namespaces/:namespaceId/projects", c.ListProjects)

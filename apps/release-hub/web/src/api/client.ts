@@ -131,10 +131,45 @@ export async function getCurrentUser(): Promise<AuthResponse> {
   return normalizeAuth(await get<AuthResponse>('/api/users/me'))
 }
 
+export async function createNamespace(name: string): Promise<NamespaceRecord> {
+  const response = await send<NamespaceRecord>('post', '/api/namespaces', { name })
+  const existing = namespaces.findIndex((namespace) => namespace.id === response.id)
+  if (existing >= 0) namespaces[existing] = response
+  else namespaces.unshift(response)
+  return response
+}
+
+export async function updateNamespace(id: number, name: string): Promise<NamespaceRecord> {
+  const response = await send<NamespaceRecord>('put', `/api/namespaces/${id}`, { name })
+  namespaces = namespaces.map((item) => item.id === id ? response : item)
+  for (const project of projects) {
+    if (project.namespaceId === id) {
+      project.namespace = response.name
+      project.namespaceName = response.name
+      project.namespaceInfo = response
+    }
+  }
+  return response
+}
+
+export async function listNamespaceRecords(): Promise<NamespaceRecord[]> {
+  namespaces = await get<NamespaceRecord[]>('/api/namespaces')
+  return namespaces
+}
+
 export async function createProject(payload: ProjectRequest): Promise<ProjectConfig> {
-  const id = payload.namespaceId ?? namespaceByName(payload.namespace ?? '').id
+  let namespace = payload.namespaceId
+    ? namespaces.find((item) => item.id === payload.namespaceId)
+    : namespaces.find((item) => item.name === (payload.namespaceName ?? payload.namespace))
+  if (!namespace) {
+    const name = payload.namespaceName ?? payload.namespace ?? ''
+    if (!name.trim()) throw new Error('Namespace name is required')
+    namespace = await createNamespace(name)
+  }
+  const id = namespace.id
   const response = await send<ProjectApi>('post', `/api/namespaces/${id}/projects`, {
     namespaceId: id,
+    namespaceName: namespace.name,
     projectName: payload.projectName,
     dependencies: payload.dependencies,
   })
@@ -206,8 +241,7 @@ export async function listProjects(namespaceName: string): Promise<ProjectConfig
 }
 
 export async function listNamespaces(): Promise<string[]> {
-  namespaces = await get<NamespaceRecord[]>('/api/namespaces')
-  return namespaces.map((namespace) => namespace.name)
+  return (await listNamespaceRecords()).map((namespace) => namespace.name)
 }
 
 export async function getProjectVersion(namespaceName: string, projectName: string, version: string): Promise<ProjectConfig> {

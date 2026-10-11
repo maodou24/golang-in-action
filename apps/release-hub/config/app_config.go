@@ -11,6 +11,8 @@ type Config struct {
 	DatabasePassword   string
 	TokenEncryptionKey string
 	SessionSecret      string
+	ManifestRepoURL    string
+	ManifestBaseBranch string
 }
 
 // Load reads config from environment with sensible defaults.
@@ -23,6 +25,8 @@ func Load() Config {
 		DatabasePassword:   getEnv("DATABASE_PASSWORD", "release-hub"),
 		TokenEncryptionKey: getEnv("TOKEN_ENCRYPTION_KEY", ""),
 		SessionSecret:      getEnv("SESSION_SECRET", ""),
+		ManifestRepoURL:    getEnv("MANIFEST_REPO_URL", ""),
+		ManifestBaseBranch: getEnv("MANIFEST_BASE_BRANCH", ""),
 	}
 }
 

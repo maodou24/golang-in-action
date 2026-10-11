@@ -69,6 +69,7 @@ export interface ProjectConfig {
 
 export interface ProjectRequest {
   namespaceId?: number
+  namespaceName?: string
   projectId?: number
   projectName: string
   dependencies: ProjectDependency[]

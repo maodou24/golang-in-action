@@ -419,7 +419,7 @@ export default defineComponent({
       if (typeof data === "string" && data.trim()) {
         return data;
       }
-      return data?.error ?? data?.message ?? err?.message ?? fallback;
+      return data?.msg ?? data?.error ?? data?.message ?? err?.message ?? fallback;
     }
 
     function showError(err: any, fallback: string) {

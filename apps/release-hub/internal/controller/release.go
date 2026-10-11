@@ -32,5 +32,10 @@ func CreateRelease(c *gin.Context) {
 		writeServiceError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, resp.Success(release))
+	detail, err := service.GetProjectVersion(c.Request.Context(), release.ID)
+	if err != nil {
+		writeServiceError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, resp.Success(detail))
 }

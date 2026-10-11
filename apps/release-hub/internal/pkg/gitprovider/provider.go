@@ -12,6 +12,7 @@ type Client interface {
 	DeleteRef(ctx context.Context, owner string, repo string, ref string) error
 	GetRef(ctx context.Context, owner string, repo string, ref string) error
 	CreateRef(ctx context.Context, owner string, repo string, oldref, newref string) error
+	CommitManifest(ctx context.Context, owner, repo, baseBranch, branch, filePath, message string, content []byte) (string, error)
 }
 
 type User struct {
